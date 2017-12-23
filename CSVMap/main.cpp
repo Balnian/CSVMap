@@ -246,6 +246,7 @@ vector<double> parseCSV1(string path, double &min, double & max, int& sizeX, int
 		string line;
 		int charCount = 0;
 		int totalOffset = 0;
+		double_conversion::StringToDoubleConverter stdc(double_conversion::StringToDoubleConverter::ALLOW_TRAILING_JUNK, 0, 0, "", "");
 		getline(csvFile, line);//remove column name
 		while (getline(csvFile, line))
 		{
@@ -255,9 +256,9 @@ vector<double> parseCSV1(string path, double &min, double & max, int& sizeX, int
 			string zVal = line.substr(zBegin + 1, line.size() - 1 - zBegin - 1);*/
 			charCount = 0;
 			totalOffset = 0;
-			double_conversion::StringToDoubleConverter stdc(double_conversion::StringToDoubleConverter::ALLOW_TRAILING_JUNK, 0, 0, "", "");
-			double dXVal = stdc.StringToDouble(line.c_str(), line.length(), &charCount); //strtod(line.c_str(), &currEnd);
-			totalOffset += charCount+1;
+			//double dXVal = stdc.StringToDouble(line.c_str(), line.length(), &charCount); //strtod(line.c_str(), &currEnd);
+			//totalOffset += charCount + 1;
+			for (auto& c : line) { ++totalOffset; if (c == ',')break; }
 			double dYVal = stdc.StringToDouble(line.c_str() + totalOffset, line.length()-totalOffset, &charCount); // atof(yVal.c_str());
 			totalOffset += charCount + 1;
 			double dZVal = stdc.StringToDouble(line.c_str() + totalOffset, line.length() - totalOffset, &charCount); // atof(zVal.c_str());
