@@ -8,7 +8,7 @@
 using std::vector;
 using namespace concurrency;
 
-void pick_accelerator()
+void AcceleratedAlgo::pick_accelerator()
 {
 
 	// Get all accelerators known to the C++ AMP runtime
@@ -36,16 +36,16 @@ void pick_accelerator()
 	//return chosen_one;
 }
 
-void GrayScaleHeightMap(vector<double>& zvalues, const double & min, const double & max, int width, int height, unsigned int bits /*= 16*//*int * Src, int * Copy, int width, int height, int stride*/)
+void AcceleratedAlgo::LongLatToMap16(vector<double>& zvalues, const double & min, const double & max, int width, int height, unsigned int bits /*= 16*//*int * Src, int * Copy, int width, int height, int stride*/)
 {
 
 	
 
 	const double stepsize = (max - min) / (std::pow(2, bits) - 1);
 
-	std::cout<< stepsize <<std::endl;
-	std::cout<< min <<std::endl;
-	std::cout<< max <<std::endl;
+	//std::cout<< stepsize <<std::endl;
+	//std::cout<< min <<std::endl;
+	//std::cout<< max <<std::endl;
 
 	concurrency::extent<2> image_extent(width, height);
 	pick_accelerator();
@@ -64,3 +64,4 @@ void GrayScaleHeightMap(vector<double>& zvalues, const double & min, const doubl
 	//texture_cpy.synchronize();
 
 }
+
