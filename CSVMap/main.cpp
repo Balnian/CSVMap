@@ -106,15 +106,15 @@ int main(int argc, char *argv[])
 		<< " milliseconds\n";
 	cout << zterrain[0] << endl;*/
 
-	/*TimeIt<>::timeIt("Writing PNG", [&]()
+	TimeIt<>::timeIt("Writing PNG", [&]()
 	{
 		writePNG(zterrain, output.value(), x, y);
-	});*/
+	});
 
-	TimeIt<>::timeIt("Writing RAW", [&]()
+	/*TimeIt<>::timeIt("Writing RAW", [&]()
 	{
 		writeRAW(zterrain, output.value()+".raw",x,y);
-	});
+	});*/
 	getchar();
 
 }
