@@ -20,11 +20,13 @@
 
 using namespace std;
 
+string print_byte_to_unit(long long && bytes);
 vector<vector<double>> parseCSV(string path, double &min, double & max, int sizeX = 2000, int sizeY = 2000);
 vector<double> parseCSV1(string path, double &min, double & max, int& sizeX, int& sizeY);
 void partial_parse(std::vector<double> & arr, string_view csvFile, unsigned int begin, unsigned int length);
 void writePNG(const vector<double> & data, string file, int x, int y);
 void writeRAW(const vector<double> & data, string file, int x, int y);
+void LongLatToMap16(std::vector<double>& zvalues, const double & min, const double & max, int width, int height, unsigned int bits = 16/*int * Src, int * Copy, int width, int height, int stride*/);
 
 
 
@@ -94,10 +96,16 @@ int main(int argc, char *argv[])
 	auto zterrain = parseCSV1(source.value(), min, max, x, y);
 	cout << "X: " << x << ", Y: " << y << endl;
 
+	cout << "Size of Data: " << print_byte_to_unit(zterrain.size() * sizeof(double)) << endl;
 
-	TimeIt<>::timeIt("GPU Compute", [&]()
+	/*TimeIt<>::timeIt("GPU Compute", [&]()
 	{
 		AcceleratedAlgo::LongLatToMap16(zterrain, min, max, x, y);
+	});*/
+
+	TimeIt<>::timeIt("CPU Compute", [&]()
+	{
+		LongLatToMap16(zterrain, min, max, x, y);
 	});
 	/*auto t1 = std::chrono::high_resolution_clock::now();
 	auto t2 = std::chrono::high_resolution_clock::now();
@@ -108,7 +116,7 @@ int main(int argc, char *argv[])
 
 	TimeIt<>::timeIt("Writing PNG", [&]()
 	{
-		writePNG(zterrain, output.value(), x, y);
+		//writePNG(zterrain, output.value(), x, y);
 	});
 
 	/*TimeIt<>::timeIt("Writing RAW", [&]()
@@ -132,7 +140,7 @@ string print_byte_to_unit(long long && bytes)
 	long exp = (long)(log(bytes) / log(unit));
 	string pre = "KMGTPE";
 	stringstream sstr;
-	sstr.precision(2);
+	sstr.precision(3);
 	sstr << bytes / pow(unit, exp) << " " + pre.substr(exp - 1, 1) + "B";
 	return sstr.str();
 
@@ -312,4 +320,35 @@ void writeRAW(const vector<double> & data, string file, int x, int y)
 	}
 	//fout.write((char*)&data16, data16.size() * sizeof(data16));
 	fout.close();
+}
+
+void LongLatToMap16(vector<double>& zvalues, const double & min, const double & max, int width, int height, unsigned int bits)
+{
+	const double stepsize = (max - min) / (std::pow(2, bits) - 1);
+
+	vector<thread> sync;
+	sync.reserve(thread::hardware_concurrency());
+	const unsigned int chunk = ceil(zvalues.size() / thread::hardware_concurrency());
+	cout << "Number of Threads: " << thread::hardware_concurrency() << endl;
+	for (size_t i = 0; i < thread::hardware_concurrency(); i++)
+	{
+		sync.emplace_back([=, &zvalues]() {
+			
+			auto beg = begin(zvalues) + (i*chunk);
+			auto ed = end(zvalues);
+			if (((i + 1)*chunk) < zvalues.size())
+				ed = beg + chunk;
+			for_each(beg, ed, [&](double & value) {
+				value = floor((value - min) / stepsize);
+			});
+		});
+		
+	}
+	for (auto &t : sync)
+	{
+		if (t.joinable())
+		{
+			t.join();
+		}
+	}
 }
